@@ -1,5 +1,5 @@
 import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
-import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl, transformInterfaceDefinition } from '../lib/utils';
 
 export async function handleGetInterface(args: any) {
     try {
@@ -9,7 +9,7 @@ export async function handleGetInterface(args: any) {
         const encodedInterfaceName = encodeURIComponent(args.interface_name);
         const url = `${await getBaseUrl()}/sap/bc/adt/oo/interfaces/${encodedInterfaceName}/source/main`;
         const response = await makeAdtRequest(url, 'GET', 30000);
-        return return_response(response);
+        return return_response(response, transformInterfaceDefinition);
     } catch (error) {
         return return_error(error);
     }

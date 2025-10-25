@@ -8,12 +8,15 @@ export async function handleGetTableContents(args: any) {
         }
         const maxRows = args.max_rows || 100;
         const encodedTableName = encodeURIComponent(args.table_name);
-        //NOTE: This service requires a custom service implementation
+        
+        // NOTE: This service requires a custom SAP service implementation
+        // You need to implement /z_mcp_abap_adt/z_tablecontent/ in your SAP system
         const url = `${await getBaseUrl()}/z_mcp_abap_adt/z_tablecontent/${encodedTableName}?maxRows=${maxRows}`;
         const response = await makeAdtRequest(url, 'GET', 30000);
-        return return_response(response);
+        return return_response(response); // Return raw response (likely JSON from custom service)
     } catch (error) {
-        // Specific error message for GetTableContents since it requires custom implementation
-        return return_error(error);
+        // Enhanced error message for GetTableContents since it requires custom implementation
+        const errorMsg = `GetTableContents requires custom SAP service '/z_mcp_abap_adt/z_tablecontent/'. Original error: ${error}`;
+        return return_error(new Error(errorMsg));
     }
 }

@@ -1,0 +1,2168 @@
+================================================================================
+PROJECT CODE SUMMARY: @orchestraight.co/mcp-abap-adt
+================================================================================
+Generated at: 2025-10-25T18:01:08.686Z
+Total Files: 19
+Total Lines: 1492
+Total Size: 47.60 KB
+
+📋 CONFIGURATION FILES
+==================================================
+
+📄 package.json
+------------------------------
+{
+  "name": "@orchestraight.co/mcp-abap-adt",
+  "version": "1.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc -p tsconfig.json",
+    "start": "node ./dist/index.js",
+    "start:http": "npm run build && node ./dist/http-server.js",
+    "dev": "npx @modelcontextprotocol/inspector node ./dist/index.js"
+  },
+  "keywords":  ["abap", "sap", "adt", "mcp", "model-context-protocol"],
+  "author": "orchestraight.co",
+  "description": "ABAP ADT (ABAP Development Tools) MCP Server for interacting with SAP systems",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },  
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mario-andreschak/mcp-abap-adt.git"
+  },  
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.4.1",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.0.1",
+    "xml-js": "^1.6.11"
+  }
+}
+
+
+📄 tsconfig.json
+------------------------------
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/@modelcontextprotocol/sdk/types"
+    ],
+    "outDir": "./dist",
+    "noImplicitAny": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+
+
+📄 README.md
+------------------------------
+# mcp-abap-adt: Your Gateway to ABAP Development Tools (ADT)
+
+[![smithery badge](https://smithery.ai/badge/@mario-andreschak/mcp-abap-adt)](https://smithery.ai/server/@mario-andreschak/mcp-abap-adt)
+
+This project provides a server that allows you to interact with SAP ABAP systems using the Model Context Protocol (MCP).  Think of it as a bridge that lets tools like [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) (a VS Code extension) talk to your ABAP system and retrieve information like source code, table structures, and more.  It's like having a remote control for your ABAP development environment!
+
+<a href="https://glama.ai/mcp/servers/gwkh12xlu7">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/gwkh12xlu7/badge" alt="ABAP ADT MCP server" />
+</a>
+
+This guide is designed for beginners, so we'll walk through everything step-by-step.  We'll cover:
+
+1.  **Prerequisites:** What you need before you start.
+2.  **Installation and Setup:**  Getting everything up and running.
+3.  **Running the Server:**  Starting the server in different modes.
+4.  **Integrating with Cline:** Connecting this server to the Cline VS Code extension.
+5.  **Troubleshooting:**  Common problems and solutions.
+6.  **Available Tools:**  A list of the commands you can use.
+
+## 1. Prerequisites
+
+Before you begin, you'll need a few things:
+
+*   **An SAP ABAP System:**  This server connects to an existing ABAP system.  You'll need:
+    *   The system's URL (e.g., `https://my-sap-system.com:8000`)
+    *   A valid username and password for that system.
+    *   The SAP client number (e.g., `100`).
+    *   Ensure that your SAP system allows connections via ADT (ABAP Development Tools). This usually involves making sure the necessary services are activated in transaction `SICF`.  Your basis administrator can help with this. Specifically, you will need the following services to be active:
+        * `/sap/bc/adt`
+    *   For the `GetTableContents` Tool, you will need the implementation of a custom service `/z_mcp_abap_adt/z_tablecontent`. You can follow this guide [here](https://community.sap.com/t5/application-development-blog-posts/how-to-use-rfc-read-table-from-javascript-via-webservice/ba-p/13172358)
+
+*   **Git (or GitHub Desktop):**  We'll use Git to download the project code.  You have two options:
+    *   **Git:**  The command-line tool.  [Download Git](https://git-scm.com/downloads).  Choose the version for your operating system (Windows, macOS, Linux). Follow the installation instructions.
+    *   **GitHub Desktop:**  A graphical user interface for Git.  Easier for beginners!  [Download GitHub Desktop](https://desktop.github.com/).  Follow the installation instructions.
+
+*   **Node.js and npm:** Node.js is a JavaScript runtime that lets you run JavaScript code outside of a web browser.  npm (Node Package Manager) is included with Node.js and is used to install packages (libraries of code).
+    *   [Download Node.js](https://nodejs.org/en/download/).  **Choose the LTS (Long Term Support) version.**  This is the most stable version. Follow the installation instructions for your operating system.  Make sure to include npm in the installation (it's usually included by default).
+    *   **Verify Installation:** After installing Node.js, open a new terminal (command prompt on Windows, Terminal on macOS/Linux) and type:
+        ```bash
+        node -v
+        npm -v
+        ```
+        You should see version numbers for both Node.js and npm.  If you see an error, Node.js might not be installed correctly, or it might not be in your system's PATH.  (See Troubleshooting below).
+
+## 2. Installation and Setup
+
+Now, let's get the project code and set it up:
+
+### Installing via Smithery
+
+To install MCP ABAP Development Tools Server for Cline automatically via [Smithery](https://smithery.ai/server/@mario-andreschak/mcp-abap-adt):
+
+```bash
+npx -y @smithery/cli install @mario-andreschak/mcp-abap-adt --client cline
+```
+
+### Manual Installation
+1.  **Clone the Repository:**
+    *   **Using Git (command line):**
+        1.  Open a terminal (command prompt or Terminal).
+        2.  Navigate to the directory where you want to store the project.  For example, to put it on your Desktop:
+            ```bash
+            cd Desktop
+            ```
+        3.  Clone the repository:
+            ```bash
+            git clone https://github.com/mario-andreschak/mcp-abap-adt
+            ```
+        4.  Change into the project directory:
+            ```bash
+            cd mcp-abap-adt  # Or whatever the folder name is
+            ```
+    *   **Using GitHub Desktop:**
+        1.  Open GitHub Desktop.
+        2.  Click "File" -> "Clone Repository...".
+        3.  In the "URL" tab, paste the repository URL.
+        4.  Choose a local path (where you want to save the project on your computer).
+        5.  Click "Clone".
+
+2.  **Install Dependencies:**  This downloads all the necessary libraries the project needs.  In the terminal, inside the root directory, run:
+    ```bash
+    npm install
+    ```
+    This might take a few minutes.
+
+3.  **Build the Project:** This compiles the code into an executable format.
+    ```bash
+    npm run build
+    ```
+
+4.  **Create a `.env` file:** This file stores sensitive information like your SAP credentials.  It's *very* important to keep this file secure.
+    1.  In the root directory, create a new file named `.env` (no extension).
+    2.  Open the `.env` file in a text editor (like Notepad, VS Code, etc.).
+    3.  Add the following lines, replacing the placeholders with your actual SAP system information:
+        Important: If your password contains a "#" character, make sure to enclose your password in quotes!
+        ```
+        SAP_URL=https://your-sap-system.com:8000  # Your SAP system URL
+        SAP_USERNAME=your_username              # Your SAP username
+        SAP_PASSWORD=your_password              # Your SAP password
+        SAP_CLIENT=100                         # Your SAP client
+        ```
+        **Important:**  Never share your `.env` file with anyone, and never commit it to a Git repository!
+
+## 3. Running the Server
+
+To be fair, you usually dont usually "run" this server on it's own. It is supposed to be integrated into an MCP Client like Cline or Claude Desktop. But you *can* manually run the server in two main ways:
+
+*   **Standalone Mode:**  This runs the server directly, and it will output messages to the terminal. The server will start and wait for client connections, so potentially rendering it useless except to see if it starts.
+*   **Development/Debug Mode:** This runs the server with the MCP Inspector. You can open the URL that it outputs in your browser and start playing around.
+
+### 3.1 Standalone Mode
+
+To run the server in standalone mode, use the following command in the terminal (from the root directory):
+
+```bash
+npm run start
+```
+
+You should see messages in the terminal indicating that the server is running.  It will listen for connections from MCP clients.  The server will keep running until you stop it (usually with Ctrl+C).
+
+### 3.2 Development/Debug Mode (with Inspector)
+
+This mode is useful for debugging.
+
+1.  **Start the server in debug mode:**
+    ```bash
+    npm run dev
+    ```
+    This will start the server and output a message like:  `🔍 MCP Inspector is up and running at http://localhost:5173 🚀`.
+    This is the URL you'll use to open the MCP inspector in your Browser.
+
+## 4. Integrating with Cline
+
+Cline is a VS Code extension that uses MCP servers to provide language support. Here's how to connect this ABAP server to Cline:
+
+1.  **Install Cline:** If you haven't already, install the "Cline" extension in VS Code.
+
+2.  **Open Cline Settings:**
+    *   Open the VS Code settings (File -> Preferences -> Settings, or Ctrl+,).
+    *   Search for "Cline MCP Settings".
+    *   Click "Edit in settings.json". This will open the `cline_mcp_settings.json` file.  The full path is usually something like: `C:\Users\username\AppData\Roaming\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` (replace `username` with your Windows username).
+
+3.  **Add the Server Configuration:**  You'll need to add an entry to the `servers` array in the `cline_mcp_settings.json` file.  Here's an example:
+
+    ```json
+    {
+      "mcpServers": 
+        {
+          "mcp-abap-adt": {
+            "command": "node",
+            "args": [
+              "C:/PATH_TO/mcp-abap-adt/dist/index.js"
+            ],
+            "disabled": true,
+            "autoApprove": []
+          }
+        // ... other server configurations ...
+        }
+    }
+    ```
+
+4.  **Test the Connection:**
+    *   Cline should automatically connect to the server.  You will see the Server appear in the "MCP Servers" Panel (in the Cline extension, you'll find different buttons on the top.)
+    *   Ask Cline to get the Sourcecode of a program and it should mention the MCP Server and should try to use the corresponding tools
+
+## 5. Troubleshooting
+
+*   **`node -v` or `npm -v` gives an error:**
+    *   Make sure Node.js is installed correctly.  Try reinstalling it.
+    *   Ensure that the Node.js installation directory is in your system's PATH environment variable.  On Windows, you can edit environment variables through the System Properties (search for "environment variables" in the Start Menu).
+*   **`npm install` fails:**
+    *   Make sure you have an internet connection.
+    *   Try deleting the `node_modules` folder and running `npm install` again.
+    *   If you're behind a proxy, you might need to configure npm to use the proxy.  Search online for "npm proxy settings".
+*   **Cline doesn't connect to the server:**
+    *   Double-check the settings in `cline_mcp_settings.json`.  It *must* be the correct, absolute path to the `root-server` directory, and use double backslashes on Windows.
+    *   Make sure the server is running (use `npm run start` to check).
+    *   Restart VS Code.
+    *   Alternatively: 
+    *   Navigate to the root folder of mcp-abap-adt in your Explorer, Shift+Right-Click and select "Open Powershell here". (Or open a Powershell and navigate to the folder using `cd C:/PATH_TO/mcp-abap-adt/`
+    *   Run "npm install"
+    *   Run "npm run build"
+    *   Run "npx @modelcontextprotocol/inspector node dist/index.js"
+    *   Open your browser at the URL it outputs. Click "connect" on the left side.
+    *   Click "Tools" on the top, then click "List Tools"
+    *   Click GetProgram and enter "SAPMV45A" or any other Report name as Program Name on the right
+    *   Test and see what the output is
+*   **SAP connection errors:**
+    *   Verify your SAP credentials in the `.env` file.
+    *   Ensure that the SAP system is running and accessible from your network.
+    *   Make sure that your SAP user has the necessary authorizations to access the ADT services.
+    *   Check that the required ADT services are activated in transaction `SICF`.
+    *   If you're using self-signed certificates or there is an issue with your SAP systems http config, make sure to set TLS_REJECT_UNAUTHORIZED as described above!
+
+## 6. Available Tools
+
+This server provides the following tools, which can be used through Cline (or any other MCP client):
+
+| Tool Name           | Description                                       | Input Parameters                                                   | Example Usage (in Cline)                                   |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `GetProgram`        | Retrieve ABAP program source code.                | `program_name` (string): Name of the ABAP program.                 | `@tool GetProgram program_name=ZMY_PROGRAM`                |
+| `GetClass`          | Retrieve ABAP class source code.                  | `class_name` (string): Name of the ABAP class.                     | `@tool GetClass class_name=ZCL_MY_CLASS`                   |
+| `GetFunctionGroup`  | Retrieve ABAP Function Group source code.         | `function_group` (string): Name of the function group              | `@tool GetFunctionGroup function_group=ZMY_FUNCTION_GROUP` |
+| `GetFunction`       | Retrieve ABAP Function Module source code.        | `function_name` (string), `function_group` (string)                | `@tool GetFunction function_name=ZMY_FUNCTION function_group=ZFG`|
+| `GetStructure`      | Retrieve ABAP Structure.                          | `structure_name` (string): Name of the DDIC Structure.             | `@tool GetStructure structure_name=ZMY_STRUCT`             |
+| `GetTable`          | Retrieve ABAP table structure.                    | `table_name` (string): Name of the ABAP DB table.                  | `@tool GetTable table_name=ZMY_TABLE`                      |
+| `GetTableContents`  | Retrieve contents of an ABAP table.               | `table_name` (string), `max_rows` (number, optional, default 100)  | `@tool GetTableContents table_name=ZMY_TABLE max_rows=50`  |
+| `GetPackage`        | Retrieve ABAP package details.                    | `package_name` (string): Name of the ABAP package.                 | `@tool GetPackage package_name=ZMY_PACKAGE`                |
+| `GetTypeInfo`       | Retrieve ABAP type information.                   | `type_name` (string): Name of the ABAP type.                       | `@tool GetTypeInfo type_name=ZMY_TYPE`                     |
+| `GetInclude`        | Retrieve ABAP include source code                 | `include_name` (string): name of the ABAP include`                 | `@tool GetInclude include_name=ZMY_INCLUDE`                |
+| `SearchObject`      | Search for ABAP objects using quick search.       | `query` (string), `maxResults` (number, optional, default 100)     | `@tool SearchObject query=ZMY* maxResults=20`              |
+| `GetInterface`      | Retrieve ABAP interface source code.              | `interface_name` (string): Name of the ABAP interface.             | `@tool GetInterface interface_name=ZIF_MY_INTERFACE`       |
+| `GetTransaction`    | Retrieve ABAP transaction details.                | `transaction_name` (string): Name of the ABAP transaction.         | `@tool GetTransaction transaction_name=ZMY_TRANSACTION`    |
+
+📂 SOURCE FILES OVERVIEW
+==================================================
+
+📄 src/handlers/handleCdsOperations.ts
+----------------------------------------
+Size: 4531 bytes | Lines: 178
+
+📦 Imports (3):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import {
+  } from '../lib/utils';
+
+📤 Exports (4):
+  export interface DdicAnnotation {
+  export interface DdicProperties {
+  export interface DdicElement {
+  export async function handleGetCdsView(args: any) {
+
+🔗 Interfaces: DdicAnnotation, DdicProperties, DdicElement
+
+⚙️  Functions: parseDDICProps, parseDdicElement, handleGetCdsView
+
+📄 src/handlers/handleGetClass.ts
+----------------------------------------
+Size: 687 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetClass(args: any) {
+
+⚙️  Functions: handleGetClass
+
+📄 src/handlers/handleGetFunction.ts
+----------------------------------------
+Size: 858 bytes | Lines: 18
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetFunction(args: any) {
+
+⚙️  Functions: handleGetFunction
+
+📄 src/handlers/handleGetFunctionGroup.ts
+----------------------------------------
+Size: 721 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetFunctionGroup(args: any) {
+
+⚙️  Functions: handleGetFunctionGroup
+
+📄 src/handlers/handleGetInclude.ts
+----------------------------------------
+Size: 706 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetInclude(args: any) {
+
+⚙️  Functions: handleGetInclude
+
+📄 src/handlers/handleGetInterface.ts
+----------------------------------------
+Size: 714 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetInterface(args: any) {
+
+⚙️  Functions: handleGetInterface
+
+📄 src/handlers/handleGetPackage.ts
+----------------------------------------
+Size: 1689 bytes | Lines: 44
+
+📦 Imports (3):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+  import convert from 'xml-js';
+
+📤 Exports (1):
+  export async function handleGetPackage(args: any) {
+
+⚙️  Functions: handleGetPackage
+
+📄 src/handlers/handleGetProgram.ts
+----------------------------------------
+Size: 711 bytes | Lines: 19
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetProgram(args: any) {
+
+⚙️  Functions: handleGetProgram
+
+📄 src/handlers/handleGetStructure.ts
+----------------------------------------
+Size: 716 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetStructure(args: any) {
+
+⚙️  Functions: handleGetStructure
+
+📄 src/handlers/handleGetTable.ts
+----------------------------------------
+Size: 688 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetTable(args: any) {
+
+⚙️  Functions: handleGetTable
+
+📄 src/handlers/handleGetTableContents.ts
+----------------------------------------
+Size: 921 bytes | Lines: 20
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetTableContents(args: any) {
+
+⚙️  Functions: handleGetTableContents
+
+📄 src/handlers/handleGetTransaction.ts
+----------------------------------------
+Size: 849 bytes | Lines: 17
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetTransaction(args: any) {
+
+⚙️  Functions: handleGetTransaction
+
+📄 src/handlers/handleGetTypeInfo.ts
+----------------------------------------
+Size: 1075 bytes | Lines: 34
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleGetTypeInfo(args: any) {
+
+⚙️  Functions: handleGetTypeInfo
+
+📄 src/handlers/handleSearchObject.ts
+----------------------------------------
+Size: 792 bytes | Lines: 18
+
+📦 Imports (2):
+  import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+  import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+📤 Exports (1):
+  export async function handleSearchObject(args: any) {
+
+⚙️  Functions: handleSearchObject
+
+📄 src/http-server.ts
+----------------------------------------
+Size: 6820 bytes | Lines: 215
+
+📦 Imports (6):
+  import express from 'express';
+  import cors from 'cors';
+  import { randomUUID } from 'node:crypto';
+  import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+  import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+  import { createMcpServer } from './lib/server';
+
+⚙️  Functions: mcpPostHandler, sessionIdGenerator, onsessioninitialized, onsessionclosed, onclose, mcpGetHandler, mcpDeleteHandler
+
+📄 src/index.test.ts
+----------------------------------------
+Size: 6396 bytes | Lines: 154
+
+📦 Imports (16):
+  import { after } from 'node:test';
+  import { mcp_abap_adt_server } from './index';
+  import { handleGetProgram } from './handlers/handleGetProgram';
+  import { handleGetClass } from './handlers/handleGetClass';
+  import { handleGetFunctionGroup } from './handlers/handleGetFunctionGroup';
+  import { handleGetFunction } from './handlers/handleGetFunction';
+  import { handleGetTable } from './handlers/handleGetTable';
+  import { handleGetStructure } from './handlers/handleGetStructure';
+  import { handleGetTableContents } from './handlers/handleGetTableContents';
+  import { handleGetPackage } from './handlers/handleGetPackage';
+  ... and 6 more
+
+📄 src/index.ts
+----------------------------------------
+Size: 966 bytes | Lines: 40
+
+📦 Imports (2):
+  import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+  import { createMcpServer } from './lib/server';
+
+📤 Exports (1):
+  export class mcp_abap_adt_server {
+
+🏛️  Classes: mcp_abap_adt_server
+
+📄 src/lib/server.ts
+----------------------------------------
+Size: 11106 bytes | Lines: 367
+
+📦 Imports (19):
+  import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+  import {
+  } from '@modelcontextprotocol/sdk/types.js';
+  import path from 'path';
+  import dotenv from 'dotenv';
+  import { handleGetProgram } from '../handlers/handleGetProgram';
+  import { handleGetClass } from '../handlers/handleGetClass';
+  import { handleGetFunctionGroup } from '../handlers/handleGetFunctionGroup';
+  import { handleGetFunction } from '../handlers/handleGetFunction';
+  import { handleGetTable } from '../handlers/handleGetTable';
+  ... and 9 more
+
+📤 Exports (3):
+  export interface SapConfig {
+  export function getConfig(): SapConfig {
+  export function createMcpServer(): Server {
+
+🔗 Interfaces: SapConfig
+
+⚙️  Functions: getConfig, createMcpServer, setupHandlers
+
+📄 src/lib/utils.ts
+----------------------------------------
+Size: 7799 bytes | Lines: 266
+
+📦 Imports (6):
+  import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
+  import axios, { AxiosError, AxiosInstance } from 'axios';
+  import { Agent } from 'https';
+  import { AxiosResponse } from 'axios';
+  import { getConfig, SapConfig } from './server';
+  import convert from 'xml-js';
+
+📤 Exports (16):
+  export { McpError, ErrorCode, AxiosResponse };
+  export function return_response(response: AxiosResponse) {
+  export function return_error(error: any) {
+  export function createAxiosInstance() {
+  export function cleanup() {
+  export async function getBaseUrl() {
+  export async function getAuthHeaders() {
+  export async function makeAdtRequest(url: string, method: string, timeout: number, data?: any, params?: any) {
+  export function btoa(str: string): string {
+  export function formatQS(params: Record<string, any>): string {
+  ... and 6 more
+
+⚙️  Functions: return_response, return_error, createAxiosInstance, cleanup, getBaseUrl, getAuthHeaders, fetchCsrfToken, makeAdtRequest, btoa, formatQS, fullParse, xmlNode, xmlNodeAttr, xmlArray, isArray, toInt
+
+
+📜 DETAILED FILE CONTENTS
+==================================================
+
+================================================================================
+FILE: src/handlers/handleCdsOperations.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { 
+    makeAdtRequest, 
+    return_error, 
+    return_response, 
+    getBaseUrl,
+    btoa,
+    formatQS,
+    fullParse,
+    isArray,
+    toInt,
+    xmlArray,
+    xmlNode,
+    xmlNodeAttr
+} from '../lib/utils';
+
+// ===== Interfaces and Types =====
+
+export interface DdicAnnotation {
+    key: string;
+    value: string;
+}
+
+export interface DdicProperties {
+    elementProps?: {
+        ddicIsKey: boolean;
+        ddicDataElement: string;
+        ddicDataType: string;
+        ddicLength: number;
+        ddicDecimals?: number;
+        ddicHeading?: string;
+        ddicLabelShort?: string;
+        ddicLabelMedium?: string;
+        ddicLabelLong?: string;
+        ddicHeadingLength?: number;
+        ddicLabelShortLength?: number;
+        ddicLabelMediumLength?: number;
+        ddicLabelLongLength?: number;
+        parentName?: string;
+    };
+    annotations: DdicAnnotation[];
+}
+
+export interface DdicElement {
+    type: string;
+    name: string;
+    properties: DdicProperties;
+    children: DdicElement[];
+}
+
+// ===== Helper Functions =====
+
+function parseDDICProps(raw: any): DdicProperties {
+    const converted = xmlArray(raw, "abapsource:entry").reduce(
+        (prev: any, cur: any) => {
+            const key = cur["@_abapsource:key"];
+            const value = cur["#text"];
+            prev[key] = value;
+            return prev;
+        },
+        {}
+    ) as any;
+
+    const {
+        ddicIsKey,
+        ddicDataElement,
+        ddicDataType,
+        ddicLength,
+        ddicDecimals,
+        ddicHeading,
+        ddicLabelShort,
+        ddicLabelMedium,
+        ddicLabelLong,
+        ddicHeadingLength,
+        ddicLabelShortLength,
+        ddicLabelMediumLength,
+        ddicLabelLongLength,
+        parentName,
+        ...rawanno
+    } = converted;
+
+    const elementProps = (ddicDataType || ddicDataType === "") && {
+        ddicIsKey: !!ddicIsKey,
+        ddicDataElement,
+        ddicDataType,
+        ddicLength,
+        ddicDecimals,
+        ddicHeading,
+        ddicLabelShort,
+        ddicLabelMedium,
+        ddicLabelLong,
+        ddicHeadingLength,
+        ddicLabelShortLength,
+        ddicLabelMediumLength,
+        ddicLabelLongLength,
+        parentName
+    };
+
+    const annotations: DdicAnnotation[] = [];
+
+    // Parse annotations from the raw data
+    for (const key in rawanno) {
+        const match = key.match(/annotation(Key|Value)\.([0-9]+)/);
+        if (match) {
+            const mtype = match[1];
+            const idx = toInt(match[2]);
+            const anno = annotations[idx] || { key: "", value: "" };
+            if (mtype === "Key") anno.key = rawanno[key];
+            else anno.value = rawanno[key];
+            annotations[idx] = anno;
+        }
+    }
+
+    return {
+        elementProps,
+        annotations
+    } as DdicProperties;
+}
+
+function parseDdicElement(raw: any): DdicElement {
+    const type = raw["@_adtcore:type"] as string;
+    const name = raw["@_adtcore:name"] as string;
+    const properties = parseDDICProps(raw["abapsource:properties"]);
+    const children = xmlArray(raw, "abapsource:elementInfo").map(
+        parseDdicElement
+    ) as DdicElement[];
+    return { type, name, properties, children } as DdicElement;
+}
+
+// ===== Handler Functions =====
+
+/**
+ * Handle reading CDS view information and structure
+ */
+export async function handleGetCdsView(args: any) {
+    try {
+        if (!args?.path) {
+            throw new McpError(ErrorCode.InvalidParams, 'Path is required');
+        }
+
+        const { 
+            path, 
+            getTargetForAssociation = false, 
+            getExtensionViews = true, 
+            getSecondaryObjects = true 
+        } = args;
+
+        const qs = formatQS({
+            getTargetForAssociation,
+            getExtensionViews,
+            getSecondaryObjects,
+            path
+        });
+
+        // Note: Accept headers should be handled in makeAdtRequest
+        const response = await makeAdtRequest(
+            `${await getBaseUrl()}/sap/bc/adt/ddic/ddl/elementinfo?${qs}`,
+            'GET',
+            30000,
+            undefined,
+            undefined
+        );
+
+        const raw = fullParse(response.data);
+        const element = parseDdicElement(raw["abapsource:elementInfo"]);
+
+        return {
+            isError: false,
+            content: [{
+                type: 'text',
+                text: JSON.stringify(element, null, 2)
+            }]
+        };
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetClass.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetClass(args: any) {
+    try {
+        if (!args?.class_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Class name is required');
+        }
+        const encodedClassName = encodeURIComponent(args.class_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/oo/classes/${encodedClassName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetFunction.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetFunction(args: any) {
+    try {
+        if (!args?.function_name || !args?.function_group) {
+            throw new McpError(ErrorCode.InvalidParams, 'Function name and group are required');
+        }
+        const encodedFunctionName = encodeURIComponent(args.function_name);
+        const encodedFunctionGroup = encodeURIComponent(args.function_group);
+        const url = `${await getBaseUrl()}/sap/bc/adt/functions/groups/${encodedFunctionGroup}/fmodules/${encodedFunctionName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetFunctionGroup.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetFunctionGroup(args: any) {
+    try {
+        if (!args?.function_group) {
+            throw new McpError(ErrorCode.InvalidParams, 'Function Group is required');
+        }
+        const encodedFunctionGroup = encodeURIComponent(args.function_group);
+        const url = `${await getBaseUrl()}/sap/bc/adt/functions/groups/${encodedFunctionGroup}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetInclude.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetInclude(args: any) {
+    try {
+        if (!args?.include_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Include name is required');
+        }
+        const encodedIncludeName = encodeURIComponent(args.include_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/programs/includes/${encodedIncludeName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetInterface.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetInterface(args: any) {
+    try {
+        if (!args?.interface_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Interface name is required');
+        }
+        const encodedInterfaceName = encodeURIComponent(args.interface_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/oo/interfaces/${encodedInterfaceName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetPackage.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+import convert from 'xml-js';
+
+export async function handleGetPackage(args: any) {
+    try {
+        if (!args?.package_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Package name is required');
+        }
+
+        const nodeContentsUrl = `${await getBaseUrl()}/sap/bc/adt/repository/nodestructure`;
+        const encodedPackageName = encodeURIComponent(args.package_name);
+        const nodeContentsParams = {
+            parent_type: "DEVC/K",
+            parent_name: encodedPackageName,
+            withShortDescriptions: true
+        };
+
+        const package_structure_response = await makeAdtRequest(nodeContentsUrl, 'POST', 30000, undefined, nodeContentsParams);
+        const result = convert.xml2js(package_structure_response.data, {compact: true});
+        
+        const nodes = result["asx:abap"]?.["asx:values"]?.DATA?.TREE_CONTENT?.SEU_ADT_REPOSITORY_OBJ_NODE || [];
+        const extractedData = (Array.isArray(nodes) ? nodes : [nodes]).filter(node => 
+            node.OBJECT_NAME?._text && node.OBJECT_URI?._text
+        ).map(node => ({
+            OBJECT_TYPE: node.OBJECT_TYPE._text,
+            OBJECT_NAME: node.OBJECT_NAME._text,
+            OBJECT_DESCRIPTION: node.DESCRIPTION?._text,
+            OBJECT_URI: node.OBJECT_URI._text
+        }));
+
+        return {
+            isError: false,
+            content: [{
+                type: 'text',
+                text: JSON.stringify(extractedData)
+            }]
+        };
+
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetProgram.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetProgram(args: any) {
+    try {
+        if (!args?.program_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Program name is required');
+        }
+        const encodedProgramName = encodeURIComponent(args.program_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/programs/programs/${encodedProgramName}/source/main`;
+
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    }
+    catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetStructure.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetStructure(args: any) {
+    try {
+        if (!args?.structure_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Structure name is required');
+        }
+        const encodedStructureName = encodeURIComponent(args.structure_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/ddic/structures/${encodedStructureName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetTable.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetTable(args: any) {
+    try {
+        if (!args?.table_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Table name is required');
+        }
+        const encodedTableName = encodeURIComponent(args.table_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/ddic/tables/${encodedTableName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetTableContents.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetTableContents(args: any) {
+    try {
+        if (!args?.table_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Table name is required');
+        }
+        const maxRows = args.max_rows || 100;
+        const encodedTableName = encodeURIComponent(args.table_name);
+        //NOTE: This service requires a custom service implementation
+        const url = `${await getBaseUrl()}/z_mcp_abap_adt/z_tablecontent/${encodedTableName}?maxRows=${maxRows}`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        // Specific error message for GetTableContents since it requires custom implementation
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetTransaction.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetTransaction(args: any) {
+    try {
+        if (!args?.transaction_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Transaction name is required');
+        }
+        const encodedTransactionName = encodeURIComponent(args.transaction_name);
+        const url = `${await getBaseUrl()}/sap/bc/adt/repository/informationsystem/objectproperties/values?uri=%2Fsap%2Fbc%2Fadt%2Fvit%2Fwb%2Fobject_type%2Ftrant%2Fobject_name%2F${encodedTransactionName}&facet=package&facet=appl`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleGetTypeInfo.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleGetTypeInfo(args: any) {
+    try {
+        if (!args?.type_name) {
+            throw new McpError(ErrorCode.InvalidParams, 'Type name is required');
+        }
+    } catch (error) {
+        return return_error(error);
+    }
+
+    const encodedTypeName = encodeURIComponent(args.type_name);
+
+
+    try {
+
+        const url = `${await getBaseUrl()}/sap/bc/adt/ddic/domains/${encodedTypeName}/source/main`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+
+        // no domain found, try data element
+        try {
+            const url = `${await getBaseUrl()}/sap/bc/adt/ddic/dataelements/${encodedTypeName}`;
+            const response = await makeAdtRequest(url, 'GET', 30000);
+            return return_response(response);
+        } catch (error) {
+            return return_error(error);
+        }
+
+    }
+}
+
+
+================================================================================
+FILE: src/handlers/handleSearchObject.ts
+================================================================================
+import { McpError, ErrorCode, AxiosResponse } from '../lib/utils';
+import { makeAdtRequest, return_error, return_response, getBaseUrl } from '../lib/utils';
+
+export async function handleSearchObject(args: any) {
+    try {
+        if (!args?.query) {
+            throw new McpError(ErrorCode.InvalidParams, 'Search query is required');
+        }
+        const maxResults = args.maxResults || 100;
+        const encodedQuery = encodeURIComponent(args.query);
+        const url = `${await getBaseUrl()}/sap/bc/adt/repository/informationsystem/search?operation=quickSearch&query=${encodedQuery}&maxResults=${maxResults}`;
+        const response = await makeAdtRequest(url, 'GET', 30000);
+        return return_response(response);
+    } catch (error) {
+        return return_error(error);
+    }
+}
+
+
+================================================================================
+FILE: src/http-server.ts
+================================================================================
+#!/usr/bin/env node
+import express from 'express';
+import cors from 'cors';
+import { randomUUID } from 'node:crypto';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+
+// Import shared server creation function
+import { createMcpServer } from './lib/server';
+
+// Configuration
+const MCP_PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT, 10) : 3234;
+
+// Express app setup
+const app = express();
+app.use(express.json());
+
+// CORS configuration to expose MCP session headers
+app.use(cors({
+  origin: '*', // Allow all origins - adjust as needed for production
+  exposedHeaders: ['Mcp-Session-Id']
+}));
+
+// Map to store transports by session ID for stateful connections
+const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
+
+/**
+ * Handles MCP POST requests for JSON-RPC communication
+ */
+const mcpPostHandler = async (req: express.Request, res: express.Response) => {
+  const sessionId = req.headers['mcp-session-id'] as string;
+  
+  if (sessionId) {
+    console.log(`Received MCP request for session: ${sessionId}`);
+  } else {
+    console.log('Received new MCP request:', req.body?.method || 'unknown method');
+  }
+
+  try {
+    let transport: StreamableHTTPServerTransport;
+
+    if (sessionId && transports[sessionId]) {
+      // Reuse existing transport for this session
+      transport = transports[sessionId];
+    } else if (!sessionId && req.body?.method === 'initialize') {
+      // New initialization request - create new transport
+      transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => randomUUID(),
+        onsessioninitialized: (newSessionId: string) => {
+          // Store the transport by session ID when session is initialized
+          console.log(`Session initialized with ID: ${newSessionId}`);
+          transports[newSessionId] = transport;
+        },
+        onsessionclosed: (closedSessionId: string) => {
+          // Clean up transport when session is closed
+          console.log(`Session closed: ${closedSessionId}`);
+          if (transports[closedSessionId]) {
+            delete transports[closedSessionId];
+          }
+        }
+      });
+
+      // Set up onclose handler to clean up transport when closed
+      transport.onclose = () => {
+        const sid = transport.sessionId;
+        if (sid && transports[sid]) {
+          console.log(`Transport closed for session ${sid}, removing from transports map`);
+          delete transports[sid];
+        }
+      };
+
+      // Connect the transport to the MCP server BEFORE handling the request
+      const server = createMcpServer();
+      await server.connect(transport);
+      await transport.handleRequest(req as any, res as any, req.body);
+      return; // Request already handled
+    } else {
+      // Invalid request - no session ID or not initialization request
+      res.status(400).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Bad Request: No valid session ID provided for non-initialization request'
+        },
+        id: null
+      });
+      return;
+    }
+
+    // Handle the request with existing transport
+    await transport.handleRequest(req as any, res as any, req.body);
+  } catch (error) {
+    console.error('Error handling MCP request:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32603,
+          message: 'Internal server error'
+        },
+        id: null
+      });
+    }
+  }
+};
+
+/**
+ * Handles MCP GET requests for Server-Sent Events (SSE) streams
+ */
+const mcpGetHandler = async (req: express.Request, res: express.Response) => {
+  const sessionId = req.headers['mcp-session-id'] as string;
+  
+  if (!sessionId || !transports[sessionId]) {
+    res.status(400).send('Invalid or missing session ID');
+    return;
+  }
+
+  // Check for Last-Event-ID header for resumability
+  const lastEventId = req.headers['last-event-id'] as string;
+  if (lastEventId) {
+    console.log(`Client reconnecting with Last-Event-ID: ${lastEventId}`);
+  } else {
+    console.log(`Establishing new SSE stream for session ${sessionId}`);
+  }
+
+  const transport = transports[sessionId];
+  await transport.handleRequest(req as any, res as any);
+};
+
+/**
+ * Handles MCP DELETE requests for session termination
+ */
+const mcpDeleteHandler = async (req: express.Request, res: express.Response) => {
+  const sessionId = req.headers['mcp-session-id'] as string;
+  
+  if (!sessionId || !transports[sessionId]) {
+    res.status(400).send('Invalid or missing session ID');
+    return;
+  }
+
+  console.log(`Received session termination request for session ${sessionId}`);
+  
+  try {
+    const transport = transports[sessionId];
+    await transport.handleRequest(req as any, res as any);
+  } catch (error) {
+    console.error('Error handling session termination:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error processing session termination');
+    }
+  }
+};
+
+// Set up MCP endpoints
+app.post('/mcp', mcpPostHandler);
+app.get('/mcp', mcpGetHandler);
+app.delete('/mcp', mcpDeleteHandler);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'mcp-abap-adt-server',
+    transport: 'streamable-http',
+    port: MCP_PORT,
+    activeSessions: Object.keys(transports).length
+  });
+});
+
+// Start the HTTP server
+app.listen(MCP_PORT, (error?: Error) => {
+  if (error) {
+    console.error('Failed to start MCP HTTP server:', error);
+    process.exit(1);
+  }
+  console.log(`MCP ABAP ADT HTTP Server listening on port ${MCP_PORT}`);
+  console.log(`Health check available at: http://localhost:${MCP_PORT}/health`);
+  console.log(`MCP endpoint available at: http://localhost:${MCP_PORT}/mcp`);
+});
+
+// Handle server shutdown gracefully
+process.on('SIGINT', async () => {
+  console.log('Shutting down MCP HTTP server...');
+  
+  // Close all active transports to properly clean up resources
+  for (const sessionId in transports) {
+    try {
+      console.log(`Closing transport for session ${sessionId}`);
+      await transports[sessionId].close();
+      delete transports[sessionId];
+    } catch (error) {
+      console.error(`Error closing transport for session ${sessionId}:`, error);
+    }
+  }
+  
+  console.log('MCP HTTP server shutdown complete');
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Received SIGTERM, shutting down gracefully...');
+  
+  // Close all active transports
+  for (const sessionId in transports) {
+    try {
+      await transports[sessionId].close();
+      delete transports[sessionId];
+    } catch (error) {
+      console.error(`Error closing transport for session ${sessionId}:`, error);
+    }
+  }
+  
+  process.exit(0);
+});
+
+
+================================================================================
+FILE: src/index.test.ts
+================================================================================
+import { after } from 'node:test';
+import { mcp_abap_adt_server } from './index';
+import { handleGetProgram } from './handlers/handleGetProgram';
+import { handleGetClass } from './handlers/handleGetClass';
+import { handleGetFunctionGroup } from './handlers/handleGetFunctionGroup';
+import { handleGetFunction } from './handlers/handleGetFunction';
+import { handleGetTable } from './handlers/handleGetTable';
+import { handleGetStructure } from './handlers/handleGetStructure';
+import { handleGetTableContents } from './handlers/handleGetTableContents';
+import { handleGetPackage } from './handlers/handleGetPackage';
+import { handleGetInclude } from './handlers/handleGetInclude';
+import { handleGetTypeInfo } from './handlers/handleGetTypeInfo';
+import { handleGetInterface } from './handlers/handleGetInterface';
+import { handleGetTransaction } from './handlers/handleGetTransaction';
+import { handleSearchObject } from './handlers/handleSearchObject';
+import { cleanup } from './lib/utils';
+
+describe('mcp_abap_adt_server - Integration Tests', () => {
+  let server: mcp_abap_adt_server;
+
+  beforeAll(() => {
+    // Initialize the server instance once before all tests
+    server = new mcp_abap_adt_server();
+  });
+
+  afterAll(async () => {
+    // Clean up server instance and utils
+    cleanup();
+    // Add a small delay to ensure all async operations complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+  });
+
+  describe('handleGetProgram', () => {
+    it('should successfully retrieve program details', async () => {
+      const result = await handleGetProgram({ program_name: 'RSABAPPROGRAM' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetClass', () => {
+    it('should successfully retrieve class details', async () => {
+      const result = await handleGetClass({ class_name: 'CL_WB_PGEDITOR_INITIAL_SCREEN' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetFunctionGroup', () => {
+    it('should successfully retrieve function group details', async () => {
+      const result = await handleGetFunctionGroup({ function_group: 'WBABAP' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetFunction', () => {
+    it('should successfully retrieve function module details', async () => {
+      const result = await handleGetFunction({ function_name: 'WB_PGEDITOR_INITIAL_SCREEN', function_group: 'WBABAP' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetTable', () => {
+    it('should successfully retrieve table details', async () => {
+      const result = await handleGetTable({ table_name: 'DD02L' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetStructure', () => {
+    it('should successfully retrieve structure details', async () => {
+      const result = await handleGetStructure({ structure_name: 'SYST' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetPackage', () => {
+    it('should successfully retrieve package details', async () => {
+      const result = await handleGetPackage({ package_name: 'SABP_TYPES' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetInclude', () => {
+    it('should successfully retrieve include details', async () => {
+      const result = await handleGetInclude({ include_name: 'LWBABAPF00' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetTypeInfo', () => {
+    it('should successfully retrieve type info', async () => {
+      const result = await handleGetTypeInfo({ type_name: 'SYST_SUBRC' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetInterface', () => {
+    it('should successfully retrieve interface details', async () => {
+      const result = await handleGetInterface({ interface_name: 'IF_T100_MESSAGE' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleSearchObject', () => {
+    it('should successfully search for an object', async () => {
+      const result = await handleSearchObject({ query: 'SYST' });
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+
+  describe('handleGetTransaction', () => {
+    it('should successfully retrieve transaction details', async () => {
+      const result = await handleGetTransaction({ transaction_name: 'SE93' });
+      console.log(result)
+      expect(result.isError).toBe(false);
+      expect(Array.isArray(result.content)).toBe(true);
+      expect(result.content.length).toBeGreaterThan(0);
+      expect(result.content[0].type).toBe('text');
+    });
+  });
+});
+
+
+================================================================================
+FILE: src/index.ts
+================================================================================
+#!/usr/bin/env node
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+// Import shared server creation function
+import { createMcpServer } from './lib/server';
+
+/**
+ * Server class for interacting with ABAP systems via ADT using stdio transport.
+ */
+export class mcp_abap_adt_server {
+  private server;
+
+  /**
+   * Constructor for the mcp_abap_adt_server class.
+   */
+  constructor() {
+    this.server = createMcpServer(); // Create configured MCP server
+
+    // Handle server shutdown on SIGINT (Ctrl+C)
+    process.on('SIGINT', async () => {
+      await this.server.close();
+      process.exit(0);
+    });
+  }
+
+  /**
+   * Starts the MCP server and connects it to the stdio transport.
+   */
+  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+  }
+}
+
+// Create and run the server
+const server = new mcp_abap_adt_server();
+server.run().catch((error) => {
+  process.exit(1);
+});
+
+
+================================================================================
+FILE: src/lib/server.ts
+================================================================================
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  ListToolsRequestSchema,
+  McpError,
+} from '@modelcontextprotocol/sdk/types.js';
+import path from 'path';
+import dotenv from 'dotenv';
+
+// Import handler functions
+import { handleGetProgram } from '../handlers/handleGetProgram';
+import { handleGetClass } from '../handlers/handleGetClass';
+import { handleGetFunctionGroup } from '../handlers/handleGetFunctionGroup';
+import { handleGetFunction } from '../handlers/handleGetFunction';
+import { handleGetTable } from '../handlers/handleGetTable';
+import { handleGetStructure } from '../handlers/handleGetStructure';
+import { handleGetTableContents } from '../handlers/handleGetTableContents';
+import { handleGetPackage } from '../handlers/handleGetPackage';
+import { handleGetInclude } from '../handlers/handleGetInclude';
+import { handleGetTypeInfo } from '../handlers/handleGetTypeInfo';
+import { handleGetInterface } from '../handlers/handleGetInterface';
+import { handleGetTransaction } from '../handlers/handleGetTransaction';
+import { handleSearchObject } from '../handlers/handleSearchObject';
+import { handleGetCdsView } from '../handlers/handleCdsOperations';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Interface for SAP configuration
+export interface SapConfig {
+  url: string;
+  username: string;
+  password: string;
+  client: string;
+}
+
+/**
+ * Retrieves SAP configuration from environment variables.
+ *
+ * @returns {SapConfig} The SAP configuration object.
+ * @throws {Error} If any required environment variable is missing.
+ */
+export function getConfig(): SapConfig {
+  const url = process.env.SAP_URL;
+  const username = process.env.SAP_USERNAME;
+  const password = process.env.SAP_PASSWORD;
+  const client = process.env.SAP_CLIENT;
+
+  // Check if all required environment variables are set
+  if (!url || !username || !password || !client) {
+    throw new Error(`Missing required environment variables. Required variables:
+- SAP_URL
+- SAP_USERNAME
+- SAP_PASSWORD
+- SAP_CLIENT`);
+  }
+
+  return { url, username, password, client };
+}
+
+/**
+ * Creates and configures an MCP server with all ABAP ADT tools.
+ * This function is shared between stdio and HTTP transports.
+ * 
+ * @returns {Server} Configured MCP server instance
+ */
+export function createMcpServer(): Server {
+  // Validate SAP configuration on server creation
+  getConfig();
+
+  const server = new Server(
+    {
+      name: 'mcp-abap-adt',
+      version: '0.1.0',
+    },
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
+
+  // Setup tool handlers
+  setupHandlers(server);
+
+  return server;
+}
+
+/**
+ * Sets up request handlers for listing and calling tools.
+ * @private
+ */
+function setupHandlers(server: Server) {
+  // Handler for ListToolsRequest
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools: [
+        {
+          name: 'GetProgram',
+          description: 'Retrieve ABAP program source code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              program_name: {
+                type: 'string',
+                description: 'Name of the ABAP program'
+              }
+            },
+            required: ['program_name']
+          }
+        },
+        {
+          name: 'GetClass',
+          description: 'Retrieve ABAP class source code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              class_name: {
+                type: 'string',
+                description: 'Name of the ABAP class'
+              }
+            },
+            required: ['class_name']
+          }
+        },
+        {
+          name: 'GetFunctionGroup',
+          description: 'Retrieve ABAP Function Group source code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              function_group: {
+                type: 'string',
+                description: 'Name of the function module'
+              }
+            },
+            required: ['function_group']
+          }
+        },
+        {
+          name: 'GetFunction',
+          description: 'Retrieve ABAP Function Module source code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              function_name: {
+                type: 'string',
+                description: 'Name of the function module'
+              },
+              function_group: {
+                type: 'string',
+                description: 'Name of the function group'
+              }
+            },
+            required: ['function_name', 'function_group']
+          }
+        },
+        {
+          name: 'GetStructure',
+          description: 'Retrieve ABAP Structure',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              structure_name: {
+                type: 'string',
+                description: 'Name of the ABAP Structure'
+              }
+            },
+            required: ['structure_name']
+          }
+        },
+        {
+          name: 'GetTable',
+          description: 'Retrieve ABAP table structure',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              table_name: {
+                type: 'string',
+                description: 'Name of the ABAP table'
+              }
+            },
+            required: ['table_name']
+          }
+        },
+        {
+          name: 'GetTableContents',
+          description: 'Retrieve contents of an ABAP table',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              table_name: {
+                type: 'string',
+                description: 'Name of the ABAP table'
+              },
+              max_rows: {
+                type: 'number',
+                description: 'Maximum number of rows to retrieve',
+                default: 100
+              }
+            },
+            required: ['table_name']
+          }
+        },
+        {
+          name: 'GetPackage',
+          description: 'Retrieve ABAP package details',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              package_name: {
+                type: 'string',
+                description: 'Name of the ABAP package'
+              }
+            },
+            required: ['package_name']
+          }
+        },
+        {
+          name: 'GetTypeInfo',
+          description: 'Retrieve ABAP type information',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              type_name: {
+                type: 'string',
+                description: 'Name of the ABAP type'
+              }
+            },
+            required: ['type_name']
+          }
+        },
+        {
+          name: 'GetInclude',
+          description: 'Retrieve ABAP Include Source Code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              include_name: {
+                type: 'string',
+                description: 'Name of the ABAP Include'
+              }
+            },
+            required: ['include_name']
+          }
+        },
+        {
+          name: 'SearchObject',
+          description: 'Search for ABAP objects using quick search',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'Search query string (use * wildcard for partial match)'
+              },
+              maxResults: {
+                type: 'number',
+                description: 'Maximum number of results to return',
+                default: 100
+              }
+            },
+            required: ['query']
+          }
+        },
+        {
+          name: 'GetTransaction',
+          description: 'Retrieve ABAP transaction details',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              transaction_name: {
+                type: 'string',
+                description: 'Name of the ABAP transaction'
+              }
+            },
+            required: ['transaction_name']
+          }
+        },
+        {
+          name: 'GetInterface',
+          description: 'Retrieve ABAP interface source code',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              interface_name: {
+                type: 'string',
+                description: 'Name of the ABAP interface'
+              }
+            },
+            required: ['interface_name']
+          }
+        },
+        {
+          name: 'GetCdsView',
+          description: 'Retrieve CDS view structure and properties',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              path: {
+                type: 'string',
+                description: 'Name or path of the CDS view'
+              },
+              getTargetForAssociation: {
+                type: 'boolean',
+                description: 'Get target for association',
+                default: false
+              },
+              getExtensionViews: {
+                type: 'boolean',
+                description: 'Get extension views',
+                default: true
+              },
+              getSecondaryObjects: {
+                type: 'boolean',
+                description: 'Get secondary objects',
+                default: true
+              }
+            },
+            required: ['path']
+          }
+        }
+      ]
+    };
+  });
+
+  // Handler for CallToolRequest
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    switch (request.params.name) {
+      case 'GetProgram':
+        return await handleGetProgram(request.params.arguments);
+      case 'GetClass':
+        return await handleGetClass(request.params.arguments);
+      case 'GetFunction':
+        return await handleGetFunction(request.params.arguments);
+      case 'GetFunctionGroup':
+        return await handleGetFunctionGroup(request.params.arguments);
+      case 'GetStructure':
+        return await handleGetStructure(request.params.arguments);
+      case 'GetTable':
+        return await handleGetTable(request.params.arguments);
+      case 'GetTableContents':
+        return await handleGetTableContents(request.params.arguments);
+      case 'GetPackage':
+        return await handleGetPackage(request.params.arguments);
+      case 'GetTypeInfo':
+        return await handleGetTypeInfo(request.params.arguments);
+      case 'GetInclude':
+        return await handleGetInclude(request.params.arguments);
+      case 'SearchObject':
+        return await handleSearchObject(request.params.arguments);
+      case 'GetInterface':
+        return await handleGetInterface(request.params.arguments);
+      case 'GetTransaction':
+        return await handleGetTransaction(request.params.arguments);
+      case 'GetCdsView':
+        return await handleGetCdsView(request.params.arguments);
+      default:
+        throw new McpError(
+          ErrorCode.MethodNotFound,
+          `Unknown tool: ${request.params.name}`
+        );
+    }
+  });
+}
+
+
+================================================================================
+FILE: src/lib/utils.ts
+================================================================================
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
+import axios, { AxiosError, AxiosInstance } from 'axios';
+import { Agent } from 'https';
+import { AxiosResponse } from 'axios';
+import { getConfig, SapConfig } from './server';
+import convert from 'xml-js';
+
+export { McpError, ErrorCode, AxiosResponse };
+
+export function return_response(response: AxiosResponse) {
+    return {
+        isError: false,
+        content: [{
+            type: 'text',
+            text: response.data
+        }]
+    };
+}
+export function return_error(error: any) {
+    return {
+        isError: true,
+        content: [{
+            type: 'text',
+            text: `Error: ${error instanceof AxiosError ? String(error.response?.data)
+                : error instanceof Error ? error.message
+                    : String(error)}`
+        }]
+    };
+}
+
+let axiosInstance: AxiosInstance | null = null;
+export function createAxiosInstance() {
+    if (!axiosInstance) {
+        axiosInstance = axios.create({
+            httpsAgent: new Agent({
+                rejectUnauthorized: false // Allow self-signed certificates
+            })
+        });
+    }
+    return axiosInstance;
+}
+
+// Cleanup function for tests
+export function cleanup() {
+    if (axiosInstance) {
+        // Clear any interceptors
+        const reqInterceptor = axiosInstance.interceptors.request.use((config) => config);
+        const resInterceptor = axiosInstance.interceptors.response.use((response) => response);
+        axiosInstance.interceptors.request.eject(reqInterceptor);
+        axiosInstance.interceptors.response.eject(resInterceptor);
+    }
+    axiosInstance = null;
+    config = undefined;
+    csrfToken = null;
+    cookies = null;
+}
+
+let config: SapConfig | undefined;
+let csrfToken: string | null = null;
+let cookies: string | null = null; // Variable to store cookies
+
+export async function getBaseUrl() {
+    if (!config) {
+        config = getConfig();
+    }
+    const { url } = config;
+    try {
+        const urlObj = new URL(url);
+        const baseUrl = Buffer.from(`${urlObj.origin}`);
+        return baseUrl;
+    } catch (error) {
+        const errorMessage = `Invalid URL in configuration: ${error instanceof Error ? error.message : error}`;
+        throw new Error(errorMessage);
+    }
+}
+
+export async function getAuthHeaders() {
+    if (!config) {
+        config = getConfig();
+    }
+    const { username, password, client } = config;
+    const auth = Buffer.from(`${username}:${password}`).toString('base64'); // Create Basic Auth string
+    return {
+        'Authorization': `Basic ${auth}`, // Basic Authentication header
+        'X-SAP-Client': client            // SAP client header
+    };
+}
+
+async function fetchCsrfToken(url: string): Promise<string> {
+    try {
+        const response = await createAxiosInstance()({
+            method: 'GET',
+            url,
+            headers: {
+                ...(await getAuthHeaders()),
+                'x-csrf-token': 'fetch'
+            }
+        });
+
+        const token = response.headers['x-csrf-token'];
+        if (!token) {
+            throw new Error('No CSRF token in response headers');
+        }
+
+        // Extract and store cookies
+        if (response.headers['set-cookie']) {
+            cookies = response.headers['set-cookie'].join('; ');
+        }
+
+        return token;
+    } catch (error) {
+        // Even if the request fails, try to get token from error response
+        if (error instanceof AxiosError && error.response?.headers['x-csrf-token']) {
+            const token = error.response.headers['x-csrf-token'];
+            if (token) {
+                 // Extract and store cookies from the error response as well
+                if (error.response.headers['set-cookie']) {
+                    cookies = error.response.headers['set-cookie'].join('; ');
+                }
+                return token;
+            }
+        }
+        // If we couldn't get token from error response either, throw the original error
+        throw new Error(`Failed to fetch CSRF token: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+export async function makeAdtRequest(url: string, method: string, timeout: number, data?: any, params?: any) {
+    // For POST/PUT requests, ensure we have a CSRF token
+    if ((method === 'POST' || method === 'PUT') && !csrfToken) {
+        try {
+            csrfToken = await fetchCsrfToken(url);
+        } catch (error) {
+            throw new Error('CSRF token is required for POST/PUT requests but could not be fetched');
+        }
+    }
+
+    const requestHeaders = {
+        ...(await getAuthHeaders())
+    };
+
+    // Add CSRF token for POST/PUT requests
+    if ((method === 'POST' || method === 'PUT') && csrfToken) {
+        requestHeaders['x-csrf-token'] = csrfToken;
+    }
+
+    // Add cookies if available
+    if (cookies) {
+        requestHeaders['Cookie'] = cookies;
+    }
+
+    const config: any = {
+        method,
+        url,
+        headers: requestHeaders,
+        timeout,
+        params: params
+    };
+
+    // Include data in the request configuration if provided
+    if (data) {
+        config.data = data;
+    }
+
+    try {
+        const response = await createAxiosInstance()(config);
+        return response;
+    } catch (error) {
+        // If we get a 403 with "CSRF token validation failed", try to fetch a new token and retry
+        if (error instanceof AxiosError && error.response?.status === 403 &&
+            error.response.data?.includes('CSRF')) {
+            csrfToken = await fetchCsrfToken(url);
+            config.headers['x-csrf-token'] = csrfToken;
+            return await createAxiosInstance()(config);
+        }
+        throw error;
+    }
+}
+
+// ===== CDS Utility Functions =====
+
+/**
+ * Base64 encoding function (Node.js equivalent of browser btoa)
+ */
+export function btoa(str: string): string {
+    return Buffer.from(str, 'utf8').toString('base64');
+}
+
+/**
+ * Format query string parameters
+ */
+export function formatQS(params: Record<string, any>): string {
+    const searchParams = new URLSearchParams();
+    
+    Object.entries(params).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(key, String(v)));
+        } else if (value !== undefined && value !== null) {
+            searchParams.append(key, String(value));
+        }
+    });
+    
+    return searchParams.toString();
+}
+
+/**
+ * Full XML parse using xml-js library
+ */
+export function fullParse(xmlString: string): any {
+    return convert.xml2js(xmlString, { compact: true });
+}
+
+/**
+ * Navigate XML nodes safely
+ */
+export function xmlNode(obj: any, ...path: string[]): any {
+    let current = obj;
+    for (const key of path) {
+        if (current && typeof current === 'object' && key in current) {
+            current = current[key];
+        } else {
+            return undefined;
+        }
+    }
+    return current?._text || current;
+}
+
+/**
+ * Get XML node attributes
+ */
+export function xmlNodeAttr(obj: any): Record<string, string> {
+    if (!obj || typeof obj !== 'object') return {};
+    
+    const attrs: Record<string, string> = {};
+    Object.keys(obj).forEach(key => {
+        if (key.startsWith('@_')) {
+            attrs[key.substring(2)] = obj[key];
+        }
+    });
+    return attrs;
+}
+
+/**
+ * Convert XML node to array format
+ */
+export function xmlArray(obj: any, ...path: string[]): any[] {
+    const node = xmlNode(obj, ...path);
+    if (!node) return [];
+    return Array.isArray(node) ? node : [node];
+}
+
+/**
+ * Check if value is an array
+ */
+export function isArray(value: any): value is any[] {
+    return Array.isArray(value);
+}
+
+/**
+ * Safe integer conversion
+ */
+export function toInt(value: any): number {
+    const num = parseInt(String(value), 10);
+    return isNaN(num) ? 0 : num;
+}
+
+
+
+📊 PROJECT STATISTICS
+==================================================
+Classes: 1
+Interfaces: 4
+Functions: 42
+Types: 0
+
+📁 Files by Directory:
+  src: 3 files
+  src/handlers: 14 files
+  src/lib: 2 files
