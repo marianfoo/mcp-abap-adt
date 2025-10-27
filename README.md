@@ -98,6 +98,12 @@ npx -y @smithery/cli install @mario-andreschak/mcp-abap-adt --client cline
         SAP_USERNAME=your_username              # Your SAP username
         SAP_PASSWORD=your_password              # Your SAP password
         SAP_CLIENT=100                         # Your SAP client
+        
+        # Optional: Control response format (default: false for JSON, true for raw XML)
+        RETURN_RAW_XML=false
+        
+        # Optional: For systems with self-signed certificates
+        # TLS_REJECT_UNAUTHORIZED=false
         ```
         **Important:**  Never share your `.env` file with anyone, and never commit it to a Git repository!
 
@@ -211,3 +217,4 @@ This server provides the following tools, which can be used through Cline (or an
 | `SearchObject`      | Search for ABAP objects using quick search.       | `query` (string), `maxResults` (number, optional, default 100)     | `@tool SearchObject query=ZMY* maxResults=20`              |
 | `GetInterface`      | Retrieve ABAP interface source code.              | `interface_name` (string): Name of the ABAP interface.             | `@tool GetInterface interface_name=ZIF_MY_INTERFACE`       |
 | `GetTransaction`    | Retrieve ABAP transaction details.                | `transaction_name` (string): Name of the ABAP transaction.         | `@tool GetTransaction transaction_name=ZMY_TRANSACTION`    |
+| `GetCdsView`        | Retrieve CDS view structure and properties.       | `path` (string): Name or path of the CDS view, optional parameters for associations/extensions | `@tool GetCdsView path=ZI_MY_CDS_VIEW`                     |

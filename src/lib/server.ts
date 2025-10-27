@@ -72,7 +72,7 @@ export function createMcpServer(): Server {
   const server = new Server(
     {
       name: 'mcp-abap-adt',
-      version: '0.1.0',
+      version: '1.2.0',
     },
     {
       capabilities: {
